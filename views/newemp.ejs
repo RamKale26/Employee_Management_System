@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add New Employee</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- ✅ SweetAlert -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- ✅ AJAX -->
+  <script type="text/javascript" src="ajax.js"></script>
+
+  <style>
+    body {
+      transition: 0.4s;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    /* ✅ LIGHT MODE */
+    body.light-mode {
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      color: black !important;
+    }
+
+    body.light-mode * {
+      color: black !important;
+    }
+
+    /* ✅ PAGE CENTER */
+    .page-wrapper {
+      min-height: 100vh;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ✅ GLASS CARD */
+    .card-glass {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      box-shadow: 0px 20px 40px rgba(0,0,0,0.3);
+      padding: 30px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    body.light-mode .card-glass {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ✅ INPUTS */
+    .form-control, .form-select {
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    body:not(.light-mode) .form-control,
+    body:not(.light-mode) .form-select {
+      background: #1f1f1f;
+      color: white;
+      border: 1px solid #555;
+    }
+
+    /* ✅ SUBMIT BUTTON */
+    .btn-custom {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      font-weight: bold;
+      color: white !important;
+      border-radius: 30px;
+      padding: 14px;
+      border: none;
+    }
+
+    /* ✅ IMAGE PREVIEW */
+    .preview-box {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .preview-box img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: none;
+      border: 3px solid #38ef7d;
+    }
+
+    /* ✅ FIXED THEME BUTTON */
+    .theme-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 9999;
+      border-radius: 30px;
+      padding: 8px 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ✅ Navbar -->
+  <%- include("home.ejs") %>
+
+  <!-- ✅ FIXED THEME TOGGLE -->
+  <button class="btn btn-warning theme-btn" onclick="toggleTheme()">
+    <i class="bi bi-circle-half"></i> Dark / Light
+  </button>
+
+  <!-- ✅ CENTER WRAPPER -->
+  <div class="page-wrapper">
+
+    <div class="card-glass">
+
+      <h3 class="text-center mb-4">
+        <i class="bi bi-person-plus-fill"></i> Add New Employee
+      </h3>
+
+      <form name="frm" action="/saveemp" method="post" enctype="multipart/form-data" onsubmit="return showSuccess()">
+
+        <div class="preview-box">
+          <img id="imgPreview">
+        </div>
+
+        <!-- ✅ NAME -->
+        <input type="text" class="form-control" name="name" placeholder="Enter Name" required>
+
+        <!-- ✅ EMAIL -->
+        <input type="text" id="uemail" class="form-control" name="email" placeholder="Enter Email"
+               onblur="checkEmailExistance(this.value)" required>
+        <span id="labelMsg"></span>
+
+        <!-- ✅ CONTACT -->
+        <input type="text" id="uc" class="form-control" name="contact" placeholder="Enter Contact Number"
+               onblur="checkContactExistance(this.value)" required>
+        <span id="lblc"></span>
+
+        <!-- ✅ SALARY -->
+        <input type="text" class="form-control" name="sal" placeholder="Enter Salary" required>
+
+        <!-- ✅ PHOTO -->
+        <input type="file" class="form-control" name="photo" onchange="previewImage(event)" required>
+
+        <!-- ✅ DEPARTMENT -->
+        <select name="deptid" class="form-select" required>
+          <option selected disabled>Choose Dept</option>
+          <%
+            deptList.forEach((deptData,index)=>{
+          %>
+            <option value="<%=deptData.deptid%>"><%=deptData.deptname%></option>
+          <%
+            });
+          %>
+        </select>
+
+        <!-- ✅ SUBMIT -->
+        <button type="submit" class="btn btn-custom w-100 mt-3">
+          <i class="bi bi-check-circle-fill"></i> Add New Employee
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ✅ FULL SCRIPTS -->
+  <script>
+    /* ✅ THEME AUTO SAVE */
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.body.classList.add("light-mode");
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark");
+    }
+
+    /* ✅ IMAGE PREVIEW */
+    function previewImage(event) {
+      const img = document.getElementById("imgPreview");
+      img.style.display = "block";
+      img.src = URL.createObjectURL(event.target.files[0]);
+    }
+
+    /* ✅ SWEETALERT SUBMIT */
+    function showSuccess() {
+      Swal.fire({
+        icon: "success",
+        title: "Employee Added Successfully!",
+        showConfirmButton: false,
+        timer: 1800
+      });
+      return true;
+    }
+  </script>
+
+</body>
+</html>

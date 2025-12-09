@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Department List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ✅ Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- ✅ AJAX -->
+  <script type="text/javascript" src="ajax.js"></script>
+
+<style>
+  body {
+    transition: 0.4s;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #ffffff;
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  /* ========================= */
+  /* ✅ LIGHT MODE BASE RESET */
+  /* ========================= */
+  body.light-mode {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    color: #000000 !important;
+  }
+
+  /* ✅ FORCE ALL TEXT TO CHANGE */
+  body.light-mode * {
+    color: #000000 !important;
+  }
+
+  /* ✅ MAIN WRAPPER */
+  .page-wrapper {
+    min-height: 100vh;
+    padding: 30px;
+  }
+
+  /* ✅ CARD UI */
+  .card-glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0px 20px 40px rgba(0,0,0,0.3);
+    padding: 25px;
+    transition: 0.4s;
+  }
+
+  body.light-mode .card-glass {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* ✅ HEADER BAR */
+  .header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+
+  /* ✅ SEARCH INPUT */
+  .search-box input {
+    border-radius: 30px;
+    padding-left: 40px;
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+  }
+
+  body.light-mode .search-box input {
+    background: white;
+    color: black !important;
+    border: 1px solid #aaa;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: gray;
+  }
+
+  /* ========================= */
+  /* ✅ TABLE PERMANENT FIX */
+  /* ========================= */
+  table,
+  thead,
+  tbody,
+  tr,
+  td,
+  th {
+    transition: 0.4s;
+  }
+
+  /* ✅ DARK MODE TABLE */
+  .table-dark {
+    background: #1f1f1f !important;
+    color: white !important;
+  }
+
+  .table-dark td,
+  .table-dark th {
+    color: white !important;
+  }
+
+  /* ✅ LIGHT MODE TABLE */
+  body.light-mode .table-dark {
+    background: #ffffff !important;
+  }
+
+  body.light-mode .table-dark td,
+  body.light-mode .table-dark th {
+    color: black !important;
+  }
+
+  body.light-mode .table-dark tbody tr {
+    background: #f8f9fa !important;
+  }
+
+  /* ✅ TABLE HEADER */
+  .table thead {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+  }
+
+  body.light-mode .table thead th {
+    color: black !important;
+  }
+
+  /* ========================= */
+  /* ✅ BUTTON FIX */
+  /* ========================= */
+  .btn {
+    color: white !important;
+  }
+
+  .btn-delete {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    border: none;
+  }
+
+  .btn-update {
+    background: linear-gradient(135deg, #36d1dc, #5b86e5);
+    border: none;
+  }
+
+  .btn-delete:hover,
+  .btn-update:hover {
+    opacity: 0.85;
+  }
+
+  .theme-btn {
+    border-radius: 30px;
+    padding: 8px 20px;
+  }
+</style>
+
+
+</head>
+<body>
+
+  <!-- ✅ Navbar -->
+  <%- include("home.ejs") %>
+
+  <div class="page-wrapper">
+
+    <div class="card-glass container-fluid">
+
+      <!-- ✅ Header -->
+      <div class="header-bar">
+        <h3><i class="bi bi-building"></i> Department List</h3>
+
+        <button class="btn btn-warning theme-btn" onclick="toggleTheme()">
+          <i class="bi bi-circle-half"></i> Dark / Light
+        </button>
+      </div>
+
+      <!-- ✅ Search -->
+      <div class="mb-4 position-relative search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" name="name" class="form-control" placeholder="Search Department..." onkeyup="searchDept(this.value)">
+      </div>
+
+      <!-- ✅ Table -->
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle text-center">
+
+          <thead>
+            <tr>
+              <th>SR NO</th>
+              <th>DEPT NAME</th>
+              <th>DELETE</th>
+              <th>UPDATE</th>
+            </tr>
+          </thead>
+
+          <tbody id="tblbody">
+
+            <%
+            if(deptList.length!=0){
+              deptList.forEach((row,index)=>{
+            %>
+
+            <tr>
+              <td><%=index+1%></td>
+              <td class="fw-bold"><%=row.deptname%></td>
+
+              <td>
+                <a href="/deldept?did=<%=row.deptid%>" class="btn btn-delete btn-sm"
+                   onclick="return confirm('Are you sure you want to delete this department?')">
+                  <i class="bi bi-trash"></i> Delete
+                </a>
+              </td>
+
+              <td>
+                <a href="/upddept?dn=<%=row.deptname%>&did=<%=row.deptid%>" class="btn btn-update btn-sm">
+                  <i class="bi bi-pencil-square"></i> Update
+                </a>
+              </td>
+            </tr>
+
+            <%
+                });
+              }
+              else{
+            %>
+
+            <tr>
+              <td colspan="4" class="text-warning fw-bold">No Data Found In Dept Table</td>
+            </tr>
+
+            <% } %>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ✅ Theme Toggle Script -->
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+    }
+  </script>
+
+</body>
+</html>
